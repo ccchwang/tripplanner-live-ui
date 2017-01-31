@@ -1,3 +1,5 @@
+var drawMap, marker=[];
+
 $(function initializeMap (){
 
   var fullstackAcademy = new google.maps.LatLng(40.705086, -74.009151);
@@ -49,15 +51,16 @@ $(function initializeMap (){
   function drawMarker (type, coords) {
     var latLng = new google.maps.LatLng(coords[0], coords[1]);
     var iconURL = iconURLs[type];
-    var marker = new google.maps.Marker({
+    marker.push(new google.maps.Marker({
       icon: iconURL,
       position: latLng
-    });
-    marker.setMap(currentMap);
-  }
+    }));
+    marker[marker.length-1].setMap(currentMap);
 
-  drawMarker('hotel', [40.705137, -74.007624]);
-  drawMarker('restaurant', [40.705137, -74.013940]);
-  drawMarker('activity', [40.716291, -73.995315]);
+  }
+  drawMap = drawMarker;
+  // drawMarker('hotel', [40.705137, -74.007624]);
+  // drawMarker('restaurant', [40.705137, -74.013940]);
+  // drawMarker('activity', [40.716291, -73.995315]);
 
 });
