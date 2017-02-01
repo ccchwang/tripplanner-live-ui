@@ -3,101 +3,62 @@ let currentDay = $(".current-day")[0].innerHTML - 1;
 let removeButton = "<button class='btn btn-xs btn-danger remove btn-circle'>x</button>";
 let makeSpan = "<span class='title'></span>";
 let makeOption = "<option></option>";
+let thingsToDo = ['hotel', 'restaurant', 'activity'];
 
-hotels.forEach(function(hotel){
-  let option = $(makeOption).text(hotel.name).attr("place-info", hotel.place.location.toString());
-  $("#hotel-choices").append(option);
-});
-
-restaurants.forEach(function(restaurant){
-  let option = $(makeOption).text(restaurant.name).attr("place-info", restaurant.place.location.toString());
-  $("#restaurant-choices").append(option);
-});
-
-activities.forEach(function(activity){
-  let option = $(makeOption).text(activity.name).attr("place-info", activity.place.location.toString());
-  $("#activity-choices").append(option);
-});
-
-
-$("#hotels").on("click", ".btn", function(){
-  let options = [].slice.call($("#hotel-choices option"));
-  let selected = options.filter(function(option){
-    return option.selected === true;
+//SET OPTIONS
+function setOptions(pair){
+  pair[0].forEach(function(instance){
+    let name = pair[1];
+    let option = $(makeOption).text(instance.name).attr("place-info", instance.place.location.toString());
+    $(`#${name}-choices`).append(option);
   });
+}
 
-  let newItem = $(makeSpan).text(selected[0].innerHTML);
-  $("#itinerary-hotel").append(newItem).append($(removeButton));
+[[hotels, 'hotel'], [restaurants, 'restaurant'], [activities, 'activity']].forEach((pair) => { setOptions(pair); })
 
-  if (itinerary[currentDay].hotel ) { itinerary[currentDay].hotel.push(newItem) }
-  else { itinerary[currentDay].hotel = [newItem] }
 
-  coordinates = $(selected[0]).attr("place-info").split(",");
-  drawMap('hotel', [coordinates[0], coordinates[1]]);
-});
+//ADD ITINERARY ITEMS
+function addItineraryItem(item) {
+  var className;
+  item === 'activity' ? className = 'activities' : className = item + 's';
 
-$("#restaurants").on("click", ".btn", function(){
-  let options = [].slice.call($("#restaurant-choices option"));
-  let selected = options.filter(function(option){
-    return option.selected === true;
+  $(`#${className}`).on("click", ".btn", function(){
+    let options = [].slice.call($(`#${item}-choices option`));
+    let selected = options.filter(function(option){
+      return option.selected === true;
+    });
+
+    let newItem = $(makeSpan).text(selected[0].innerHTML);
+    $(`#itinerary-${item}`).append(newItem).append($(removeButton));
+
+    if (itinerary[currentDay][item] ) { itinerary[currentDay][item].push(newItem) }
+    else { itinerary[currentDay][item] = [newItem] }
+
+    coordinates = $(selected[0]).attr("place-info").split(",");
+    drawMap(`${item}`, [coordinates[0], coordinates[1]]);
   });
+}
 
-  let newItem = $(makeSpan).text(selected[0].innerHTML);
-  $("#itinerary-restaurant").append(newItem).append($(removeButton));
+thingsToDo.forEach((item) => { addItineraryItem(item) });
 
-  if (itinerary[currentDay].restaurant ) { itinerary[currentDay].restaurant.push(newItem) }
-  else { itinerary[currentDay].restaurant = [newItem] }
 
-  coordinates = $(selected[0]).attr("place-info").split(",");
-  drawMap('restaurant', [coordinates[0], coordinates[1]]);
-});
-
-$("#activities").on("click", ".btn", function(){
-  let options = [].slice.call($("#activity-choices option"));
-  let selected = options.filter(function(option){
-    return option.selected === true;
-  });
-
-  let newItem = $(makeSpan).text(selected[0].innerHTML);
-  $("#itinerary-activity").append(newItem).append($(removeButton));
-
-  if (itinerary[currentDay].activity ) { itinerary[currentDay].activity.push(newItem) }
-  else { itinerary[currentDay].activity = [newItem] }
-
-  coordinates = $(selected[0]).attr("place-info").split(",");
-  drawMap('activity', [coordinates[0], coordinates[1]]);
-});
-
-$("#itinerary-hotel").on("click", ".btn", function(){
-  let prevSibling = $(this)[0].previousSibling;
-  itinerary[currentDay].hotel = itinerary[currentDay].hotel.filter((hotel) => {
-    return hotel[0].innerHTML !== prevSibling.innerHTML;
+//REMOVE ITINERARY ITEMS
+function removeItineraryItem(item) {
+  $(`#itinerary-${item}`).on("click", ".btn", function(){
+    let prevSibling = $(this)[0].previousSibling;
+    itinerary[currentDay][item] = itinerary[currentDay][item].filter((instance) => {
+      return instance[0].innerHTML !== prevSibling.innerHTML;
+    })
+    prevSibling.remove();
+    this.remove();
+    marker.pop().setMap(null)
   })
-  prevSibling.remove();
-  this.remove();
-  marker.pop().setMap(null)
-})
+}
 
-$("#itinerary-restaurant").on("click", ".btn", function(){
-  let prevSibling = $(this)[0].previousSibling;
-  itinerary[currentDay].restaurant = itinerary[currentDay].restaurant.filter((restaurant) => {
-    return restaurant[0].innerHTML !== prevSibling.innerHTML;
-  })
-  prevSibling.remove();
-  this.remove();
-  marker.pop().setMap(null)
-})
+thingsToDo.forEach((item) => { removeItineraryItem(item) });
 
-$("#itinerary-activity").on("click", ".btn", function(){
-  let prevSibling = $(this)[0].previousSibling;
-  itinerary[currentDay].activity = itinerary[currentDay].activity.filter((activity) => {
-    return activity[0].innerHTML !== prevSibling.innerHTML;
-  })
-  prevSibling.remove();
-  this.remove();
-  marker.pop().setMap(null)
-})
 
+//ADD NEW DAYS
 $("#day-add").on("click", function(){
   let newDayNum = Number($("#day-add")[0].previousElementSibling.innerHTML) + 1;
   let newDay = $(`<button class='btn btn-circle day-btn'>${newDayNum}</button>`)
@@ -105,45 +66,19 @@ $("#day-add").on("click", function(){
 })
 
 
-function setHotel(){
-  $("#itinerary-hotel").empty();
+//RESET FOR DIFFERENT DAYS AND REMOVE DAYS
+function reset(item){
+  $(`#itinerary-${item}`).empty();
 
-  if ( itinerary[currentDay].hotel ) {
-    itinerary[currentDay].hotel.forEach(function(dayItem) {
+  if ( itinerary[currentDay][item] ) {
+    itinerary[currentDay][item].forEach(function(dayItem) {
       let name = dayItem[0].innerHTML;
       var dayItem = $(makeSpan).text(name);
 
-      $("#itinerary-hotel").append(dayItem).append($(removeButton));
+      $(`#itinerary-${item}`).append(dayItem).append($(removeButton));
     })
   }
 }
-
-function setRestaurant(){
-  $("#itinerary-restaurant").empty();
-
-  if ( itinerary[currentDay].restaurant ) {
-    itinerary[currentDay].restaurant.forEach(function(dayItem) {
-      let name = dayItem[0].innerHTML;
-      var dayItem = $(makeSpan).text(name);
-
-      $("#itinerary-restaurant").append(dayItem).append($(removeButton));
-    })
-  }
-}
-
-function setActivity(){
-  $("#itinerary-activity").empty();
-
-  if ( itinerary[currentDay].activity ) {
-    itinerary[currentDay].activity.forEach(function(dayItem) {
-      let name = dayItem[0].innerHTML;
-      var dayItem = $(makeSpan).text(name);
-
-      $("#itinerary-activity").append(dayItem).append($(removeButton));
-    })
-  }
-}
-
 
 $(".day-buttons").on("click", ".day-btn", function(){
 
@@ -151,15 +86,12 @@ $(".day-buttons").on("click", ".day-btn", function(){
     $(".current-day")[0].className = "btn btn-circle day-btn";
 
     $(this).addClass("current-day");
-
     currentDay = $(this)[0].innerHTML - 1;
     $("#day-title span").text(`Day ${currentDay+1}`);
 
     if(!itinerary[currentDay]) {itinerary[currentDay] = {}};
 
-    setHotel.call(this);
-    setRestaurant.call(this);
-    setActivity.call(this);
+    thingsToDo.forEach((item) => { reset(item) })
   }
 })
 
@@ -173,8 +105,6 @@ $(".remove").on("click", function() {
     currentDay = $(".current-day")[0].innerHTML - 1;
     $("#day-title span").text(`Day ${currentDay+1}`);
 
-    setHotel.call(this);
-    setRestaurant.call(this);
-    setActivity.call(this);
+    thingsToDo.forEach((item) => { reset(item) })
   }
 })
