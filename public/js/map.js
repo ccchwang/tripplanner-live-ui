@@ -1,4 +1,4 @@
-var drawMap, marker=[];
+var drawMap, marker;
 
 $(function initializeMap (){
 
@@ -51,12 +51,13 @@ $(function initializeMap (){
   function drawMarker (type, coords) {
     var latLng = new google.maps.LatLng(coords[0], coords[1]);
     var iconURL = iconURLs[type];
-    marker.push(new google.maps.Marker({
+    marker = new google.maps.Marker({
       icon: iconURL,
       position: latLng
-    }));
-    marker[marker.length-1].setMap(currentMap);
+    });
+    marker.setMap(currentMap);
 
+    return marker;
   }
   drawMap = drawMarker;
   // drawMarker('hotel', [40.705137, -74.007624]);

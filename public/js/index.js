@@ -1,150 +1,180 @@
-var days = [];
-var currentDay = $(".current-day")[0].innerHTML - 1;
+let itinerary = [{}];
+let currentDay = $(".current-day")[0].innerHTML - 1;
+let removeButton = "<button class='btn btn-xs btn-danger remove btn-circle'>x</button>";
+let makeSpan = "<span class='title'></span>";
+let makeOption = "<option></option>";
+
+hotels.forEach(function(hotel){
+  let option = $(makeOption).text(hotel.name).attr("place-info", hotel.place.location.toString());
+  $("#hotel-choices").append(option);
+});
+
+restaurants.forEach(function(restaurant){
+  let option = $(makeOption).text(restaurant.name).attr("place-info", restaurant.place.location.toString());
+  $("#restaurant-choices").append(option);
+});
+
+activities.forEach(function(activity){
+  let option = $(makeOption).text(activity.name).attr("place-info", activity.place.location.toString());
+  $("#activity-choices").append(option);
+});
 
 
-
-  hotels.forEach(function(hotel){
-    let option = $("<option></option>").text(hotel.name).attr("placeObj", hotel.place.location.toString())
-
-    $("#hotel-choices").append(option);
-
+$("#hotels").on("click", ".btn", function(){
+  let options = [].slice.call($("#hotel-choices option"));
+  let selected = options.filter(function(option){
+    return option.selected === true;
   });
 
-  restaurants.forEach(function(restaurant){
-    let option = $("<option></option>").text(restaurant.name).attr("placeObj", restaurant.place.location.toString())
-    $("#restaurant-choices").append(option);
+  let newItem = $(makeSpan).text(selected[0].innerHTML);
+  $("#itinerary-hotel").append(newItem).append($(removeButton));
+
+  if (itinerary[currentDay].hotel ) { itinerary[currentDay].hotel.push(newItem) }
+  else { itinerary[currentDay].hotel = [newItem] }
+
+  coordinates = $(selected[0]).attr("place-info").split(",");
+  drawMap('hotel', [coordinates[0], coordinates[1]]);
+});
+
+$("#restaurants").on("click", ".btn", function(){
+  let options = [].slice.call($("#restaurant-choices option"));
+  let selected = options.filter(function(option){
+    return option.selected === true;
   });
 
-  activities.forEach(function(activity){
-    let option = $("<option></option>").text(activity.name).attr("placeObj", activity.place.location.toString())
-    $("#activity-choices").append(option);
+  let newItem = $(makeSpan).text(selected[0].innerHTML);
+  $("#itinerary-restaurant").append(newItem).append($(removeButton));
+
+  if (itinerary[currentDay].restaurant ) { itinerary[currentDay].restaurant.push(newItem) }
+  else { itinerary[currentDay].restaurant = [newItem] }
+
+  coordinates = $(selected[0]).attr("place-info").split(",");
+  drawMap('restaurant', [coordinates[0], coordinates[1]]);
+});
+
+$("#activities").on("click", ".btn", function(){
+  let options = [].slice.call($("#activity-choices option"));
+  let selected = options.filter(function(option){
+    return option.selected === true;
   });
 
+  let newItem = $(makeSpan).text(selected[0].innerHTML);
+  $("#itinerary-activity").append(newItem).append($(removeButton));
 
-  $("#hotels button").on("click", function(){
-    let options = [].slice.call($("#hotel-choices option"));
-    let selected = options.filter(function(option){
-      return option.selected === true;
-    });
-    selected = [].slice.call(selected);
-    var text = selected[0].innerHTML;
-    var something = $("<span class='title'></span>").text(text);
-    var button = $("<button class='btn btn-xs btn-danger remove btn-circle'>x</button>")
+  if (itinerary[currentDay].activity ) { itinerary[currentDay].activity.push(newItem) }
+  else { itinerary[currentDay].activity = [newItem] }
 
-    if (days[currentDay]) { //day[0]
-      days[currentDay].push(something)
-    } else {
-      days[currentDay] = [something]
-    }
-    $("#selectedHotel").append(something);
-    $("#selectedHotel").append(button);
-    console.log(days)
-    var coordinates = selected[0].attributes.placeobj.nodeValue;
-    coordinates = coordinates.split(",");
-    drawMap('hotel', [coordinates[0], coordinates[1]]);
-  });
+  coordinates = $(selected[0]).attr("place-info").split(",");
+  drawMap('activity', [coordinates[0], coordinates[1]]);
+});
 
-   $("#restaurants button").on("click", function(){
-    let options = [].slice.call($("#restaurant-choices option"));
-    let selected = options.filter(function(option){
-      return option.selected === true;
-    });
-    selected = [].slice.call(selected);
-    var text = selected[0].innerHTML;
-    var something = $("<span class='title'></span>").text(text);
-    var button = $("<button class='btn btn-xs btn-danger remove btn-circle'>x</button>")
-
-    $("#selectedRestaurant").append(something);
-    $("#selectedRestaurant").append(button);
-
-    var coordinates = selected[0].attributes.placeobj.nodeValue;
-    coordinates = coordinates.split(",");
-    drawMap('restaurant', [coordinates[0], coordinates[1]]);
-  });
-
-   $("#activities button").on("click", function(){
-    let options = [].slice.call($("#activity-choices option"));
-    let selected = options.filter(function(option){
-      return option.selected === true;
-    });
-    selected = [].slice.call(selected);
-    var text = selected[0].innerHTML;
-    var something = $("<span class='title'></span>").text(text);
-    var button = $("<button class='btn btn-xs btn-danger remove btn-circle'>x</button>")
-
-    $("#selectedActivities").append(something);
-    $("#selectedActivities").append(button);
-
-    var coordinates = selected[0].attributes.placeobj.nodeValue;
-    coordinates = coordinates.split(",");
-    drawMap('activity', [coordinates[0], coordinates[1]]);
-  });
-
-$("#selectedHotel").on("click", ".btn", function(){
-  var prevSibling = $("this").prevObject[0].activeElement.previousSibling;
+$("#itinerary-hotel").on("click", ".btn", function(){
+  let prevSibling = $(this)[0].previousSibling;
+  itinerary[currentDay].hotel = itinerary[currentDay].hotel.filter((hotel) => {
+    return hotel[0].innerHTML !== prevSibling.innerHTML;
+  })
   prevSibling.remove();
   this.remove();
   marker.pop().setMap(null)
 })
 
-$("#selectedRestaurant").on("click", ".btn", function(){
-  var prevSibling = $("this").prevObject[0].activeElement.previousSibling;
+$("#itinerary-restaurant").on("click", ".btn", function(){
+  let prevSibling = $(this)[0].previousSibling;
+  itinerary[currentDay].restaurant = itinerary[currentDay].restaurant.filter((restaurant) => {
+    return restaurant[0].innerHTML !== prevSibling.innerHTML;
+  })
   prevSibling.remove();
   this.remove();
   marker.pop().setMap(null)
 })
 
-$("#selectedActivities").on("click", ".btn", function(){
-  var prevSibling = $("this").prevObject[0].activeElement.previousSibling;
+$("#itinerary-activity").on("click", ".btn", function(){
+  let prevSibling = $(this)[0].previousSibling;
+  itinerary[currentDay].activity = itinerary[currentDay].activity.filter((activity) => {
+    return activity[0].innerHTML !== prevSibling.innerHTML;
+  })
   prevSibling.remove();
   this.remove();
   marker.pop().setMap(null)
 })
 
 $("#day-add").on("click", function(){
-  var newDay = $(".day-buttons").children().length
-  var btn = $(`<button class='btn btn-circle day-btn'>${newDay}</button>`)
-  $("#day-add").before(btn)
+  let newDayNum = Number($("#day-add")[0].previousElementSibling.innerHTML) + 1;
+  let newDay = $(`<button class='btn btn-circle day-btn'>${newDayNum}</button>`)
+  $("#day-add").before(newDay);
 })
 
 
 function setHotel(){
-  $("#selectedHotel").empty();
+  $("#itinerary-hotel").empty();
 
+  if ( itinerary[currentDay].hotel ) {
+    itinerary[currentDay].hotel.forEach(function(dayItem) {
+      let name = dayItem[0].innerHTML;
+      var dayItem = $(makeSpan).text(name);
 
-  var dayNumber = this.innerHTML - 1;
-
-  days[dayNumber].forEach(function(item) {
-    var name = item[0].innerHTML;
-
-    var something = $("<span class='title'></span>").text(name);
-    var button = $("<button class='btn btn-xs btn-danger remove btn-circle'>x</button>")
-
-    $("#selectedHotel").append(something);
-    $("#selectedHotel").append(button);
-  })
-
-  // $("#hotels button").on("click", function(){
-  //   let options = [].slice.call($("#hotel-choices option"));
-  //   let selected = options.filter(function(option){
-  //     return option.selected === true;
-  //   });
-  //   selected = [].slice.call(selected);
-  //   var text = selected[0].innerHTML;
-
-
-  //   var coordinates = selected[0].attributes.placeobj.nodeValue;
-  //   coordinates = coordinates.split(",");
-  //   drawMap('hotel', [coordinates[0], coordinates[1]]);
-  // });
-
+      $("#itinerary-hotel").append(dayItem).append($(removeButton));
+    })
+  }
 }
+
+function setRestaurant(){
+  $("#itinerary-restaurant").empty();
+
+  if ( itinerary[currentDay].restaurant ) {
+    itinerary[currentDay].restaurant.forEach(function(dayItem) {
+      let name = dayItem[0].innerHTML;
+      var dayItem = $(makeSpan).text(name);
+
+      $("#itinerary-restaurant").append(dayItem).append($(removeButton));
+    })
+  }
+}
+
+function setActivity(){
+  $("#itinerary-activity").empty();
+
+  if ( itinerary[currentDay].activity ) {
+    itinerary[currentDay].activity.forEach(function(dayItem) {
+      let name = dayItem[0].innerHTML;
+      var dayItem = $(makeSpan).text(name);
+
+      $("#itinerary-activity").append(dayItem).append($(removeButton));
+    })
+  }
+}
+
 
 $(".day-buttons").on("click", ".day-btn", function(){
 
-  if ($("this").prevObject[0].activeElement.innerHTML !== "+") {
-    $("button.current-day").removeClass(".current-day")
-    $("this").prevObject[0].activeElement.className += " current-day";
-  setHotel.call(this)
+  if ($(this)[0].innerHTML !== "+") {
+    $(".current-day")[0].className = "btn btn-circle day-btn";
+
+    $(this).addClass("current-day");
+
+    currentDay = $(this)[0].innerHTML - 1;
+    $("#day-title span").text(`Day ${currentDay+1}`);
+
+    if(!itinerary[currentDay]) {itinerary[currentDay] = {}};
+
+    setHotel.call(this);
+    setRestaurant.call(this);
+    setActivity.call(this);
+  }
+})
+
+$(".remove").on("click", function() {
+  if (currentDay !== 0) { itinerary[currentDay] = {};
+
+    let prevSibling = $(".current-day")[0].previousElementSibling;
+    $(".current-day").remove();
+    prevSibling.className = "btn btn-circle day-btn current-day";
+
+    currentDay = $(".current-day")[0].innerHTML - 1;
+    $("#day-title span").text(`Day ${currentDay+1}`);
+
+    setHotel.call(this);
+    setRestaurant.call(this);
+    setActivity.call(this);
   }
 })
